@@ -1,0 +1,33 @@
+{
+  "manifest_version": 2,
+  "name": "Job Finder",
+  "version": "0.0.1",
+  "description": "Help automate your job searching by keeping you up to date on the newest listings from the most popular jop posting websites.",
+  "icons": {
+    "16": "app_icons/main-100.png",
+    "32": "app_icons/main-100.png",
+    "48": "app_icons/main-100.png",
+    "128": "app_icons/main-100.png"
+  },
+	"background": {
+    "page": "background.html",
+		"persistent": true
+	},
+	"browser_action": {
+		"default_title": "Job Tracker",
+    "default_popup": "popup_page/popup.html",
+    "default_icons": {
+      "16": "icons/16x16.png",
+      "48": "icons/48x48.png",
+      "128": "icons/128x128.png"
+    }
+	},
+	"permissions": [
+		"tabs",
+		"alarms",
+		"background",
+		"storage",
+    "<all_urls>"
+	],
+	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+}

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="popup.css" rel="stylesheet">
+  </head>
+  <body>
+
+    <header>
+      <div class="nav-back hide">
+        <img src="icons/icons8-back-50.png">
+      </div>
+
+      <h1>Job Finder</h1>
+
+      <div id="nav-links">
+
+        <div class="saved-listings">
+          <img src="icons/icons8-book-50.png">
+          <span class="saved-count">0</span>
+        </div>
+        <img src="icons/icons8-settings-50.png">
+
+      </div>
+
+      <form>
+        <table width="100%">
+          <tr>
+            <td width="65%">
+              <input id="user-keywords" type="text" size="28" placeholder="job, skills, industry, keywords" style="margin-bottom: 0.5rem;">
+              <input id="user-location" type="text" size="28" placeholder="city, state, zip">
+            </td>
+
+            <td width="35%" style="text-align: center;">
+              <button id="search-button" type="submit" disabled>Search</button>
+              <br>
+              <div id="last-updated"></div>
+            </td>
+          </tr>
+
+          <tr id="error-row" class="d-none">
+            <td>
+            </td>
+          </tr>
+
+        </table>
+      </form>
+
+      <div id="message" class="d-none"></div>
+
+      <div id="spinner-container">
+        <div>
+          <img id="loading-spinner" src="icons/loading.gif">
+          <span>Updating...</span>
+        </div>
+        <span class="d-none" style="font-size: 0.7rem;"><i>(window was opened in the background to do the search)</i></span>
+      </div>
+
+    </header>
+
+    <div class="content">
+
+      <div id="main-page">
+
+        <div class="list-wrapper">
+
+          <ul id="listings">
+          </ul>
+
+          <div style="text-align: center;">
+            <a href="#" id="show-more" class="d-none">Show More</a>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div id="settings-page">
+
+        <div class="d-table">
+          <div>
+            <span>Supported Websites</span>
+            <div>
+              <ul style="margin: 0;">
+                <li><input class="job-sites" type="checkbox" name="site0" checked>Indeed.com</li>
+                <li><input class="job-sites" type="checkbox" name="site1" checked>LinkedIn</li>
+                <li><input class="job-sites" type="checkbox" name="site2" checked>Career Builder</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="frequency-wrapper d-table">
+
+          <div>
+            <span>Job Search Frequency</span>
+            <select id="frequency-interval">
+              <option value="6">Every 6 Hours</option>
+              <option value="1">Hourly</option>
+              <option value="24">Daily</option>
+            </select>
+          </div>
+          <p><i>* You can always perform a search by yourself and the frequency will get pushed back depending on your selection</i></p>
+
+        </div>
+
+        <div class="d-table">
+          <div>
+            <p style="width: 85%;">Combine search results?</p>
+            <div>
+              <input id="aggregate-checkbox" type="checkbox" checked>
+              <span id="aggregate-label">Yes</span>
+            </div>
+          </div>
+          <p style="font-size: 0.7rem;"><i>* If "Yes" is selected and you change your search parameters, all previous job listings will be combined when the new search is performed.</i></p>
+        </div>
+
+        <div class="d-table">
+          <div>
+            <span style="width: 80%;">Limit listings per source</span>
+            <select id="listings-limit">
+              <option value="50">No Limit</option>
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+              <option value="40">40</option>
+            </select>
+          </div>
+          <p style="font-size: 0.7rem;"><i>* Limits the amount of top listings retrieved from each supported website.</i></p>
+          <p style="font-size: 0.7rem;"><i>** "No Limit" defaults to 50.</i></p>
+        </div>
+
+        <p style="font-size: 0.8rem;"><i>* Some user may see a window flash when performing a search or when search starts automatically from the frequency selected. This is normal behavior as a window is opened and sent to the background.<br><br>This is an open source project. No information is collected, no cookies are used. All of your preferences and the listings you bookmarked are saved inside the browser only.<br><br>If you have any suggestions for more supported websites or more functionality, do not hesitate to write.<br><br>Community contributions to the project are very welcomed.</i></p>
+
+      </div>
+
+
+    </div>
+
+    <footer>
+
+      <table width="100%">
+        <tbody>
+          <tr style="vertical-align: middle;">
+
+            <td width="5%">
+              <a href="#" target="_blank"><img src="icons/icons8-github-50.png"></a>
+            </td>
+
+            <td width="65%" style="text-align: center;">
+              <span>ikovlevd@gmail.com</span>
+            </td>
+
+            <td width="30%">
+              <span>Icons by </span>
+              <a href="https://icons8.com" target="_blank">Icons8</a>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

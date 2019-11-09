@@ -1,0 +1,247 @@
+html, body {
+  height: 600px;
+  max-height: 600px;
+  width: 400px;
+  max-width: 400px;
+  font-size: 16px;
+  padding: 0;
+  margin: 0;
+}
+
+/* global classes */
+
+.show {
+  visibility: visible;
+}
+
+.hide {
+  visibility: hidden;
+}
+
+.d-none {
+  display: none;
+}
+
+a, a:visited, a:hover, a:active {
+  color: rgb(0, 0, 238);
+}
+
+button:focus {
+  outline: none;
+}
+
+#message {
+  font-size: 0.9rem;
+  margin: 2% 0;
+}
+
+.error {
+  font-size: 0.8rem;
+  border: 1px solid black;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+.content {
+  position: relative;
+  width: 100%;
+}
+
+/* header section */
+
+header {
+  background-color: #f0f0f0;
+  padding: 0 5px;
+  border-bottom: 1px solid black;
+}
+
+header img, footer img {
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+}
+
+.saved-listings {
+  position: relative;
+  display: inline-block;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.saved-count {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-size: 10px;
+  font-weight: 800;
+  background-color: #0000EE;
+  color: white;
+  padding: 2px;
+  border: 1px solid #0000EE;
+  border-radius: 10px;
+}
+.nav-back {
+  display: inline-block;
+  width: 24%;
+}
+
+h1 {
+  display: inline-block;
+  text-align: center;
+  width: 50%;
+  margin: 1rem 0;
+}
+
+#nav-links {
+  display: inline-block;
+  width: 24%;
+  text-align: right;
+}
+
+input {
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+}
+
+#search-button {
+  font-size: 1.1rem;
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#last-updated {
+  font-size: 0.7rem;
+  line-height: 1rem;
+}
+
+#error-row {
+  color: red;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* main page section */
+
+#main-page {
+  z-index: 1;
+  padding: 10px;
+  height: 410px;
+  overflow: scroll;
+}
+
+#spinner-container {
+  width: 100%;
+  text-align: center;
+}
+
+#loading-spinner {
+  max-width: 2rem;
+  width: 2rem;
+  max-height: 2rem;
+  height: 2rem;
+  vertical-align: middle;
+}
+
+#listings {
+  margin: 0;
+  list-style-type: none;
+  padding: 0;
+  height: 100%;
+}
+
+.job-listing {
+  border-top: 1px solid gray;
+  padding: .5rem 0;
+}
+
+.job-listing:first-child {
+  border: none;
+  padding-top: 0;
+}
+
+.listing-title {
+  display: inline-block;
+  margin: 0;
+  width: 90%;
+  vertical-align: middle;
+}
+
+.listing-bookmark {
+  display: inline-block;
+  cursor: pointer;
+  max-height: 1.5rem;
+  max-width: 1.5rem;
+  vertical-align: middle;
+}
+
+.listing-source {
+  font-size: 0.8rem;
+}
+
+.listing-summary {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+}
+
+/* settings section */
+
+#settings-page {
+  position: absolute;
+  background-color: white;
+  width: 100%;
+  height: 400px;
+  top: 0;
+  right: -100%;
+  z-index: 10;
+  -webkit-transition: 0.1s linear;                                                                                                                 
+  -ms-transition: 0.1s linear;
+  transition: 0.1s linear;
+  overflow: scroll;
+  border-bottom: 1px solid black;
+}
+
+#settings-page > * {
+  padding: 10px;
+  margin: 0 auto;
+}
+
+.d-table {
+  display: table;
+  border-bottom: 1px solid lightgray;
+  width: 90%;
+}
+
+.d-table > * {
+  display: table-row;
+}
+
+.d-table > * > * {
+  display: table-cell;
+}
+
+.frequency-wrapper p {
+  font-size: 0.7rem;
+}
+
+#settings-page ul {
+  list-style-type: none;
+}
+
+/* footer section */
+
+footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 0 5px;
+  height: 35px;
+  background-color: #f0f0f0;
+  border-top: 1px solid black;
+  z-index: 100;
+}
+
