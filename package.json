@@ -2,7 +2,7 @@
   "name": "jobfinder",
   "version": "0.0.1",
   "description": "Chrome extension to automate the job search among the most popular job sites.",
-  "main": "index.js",
+  "main": "app/background/backgroundController.js",
   "scripts": {
     "test": "babel-node test/run.js"
   },
@@ -11,13 +11,22 @@
   "devDependencies": {
     "@babel/core": "^7.7.2",
     "@babel/node": "^7.7.0",
+    "@babel/plugin-transform-runtime": "^7.6.2",
     "@babel/preset-env": "^7.7.1",
     "@babel/register": "^7.7.0",
+    "babelify": "^10.0.0",
+    "browserify": "^16.5.0",
+    "gulp": "^4.0.2",
+    "gulp-watch": "^5.0.1",
     "jasmine": "^3.5.0",
     "jasmine-console-reporter": "^3.1.0",
-    "jsdom": "^15.2.1"
+    "jsdom": "^15.2.1",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@babel/runtime": "^7.7.2"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/denikov/job-finder-chrome-extension.git"

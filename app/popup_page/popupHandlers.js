@@ -1,20 +1,23 @@
 export class Handlers {
 
-  constructor(config, store, model) {
-    this._config = config;
-    this._store = store;
+  constructor(defaults, model, services) {
+    this._defaults = defaults;
     this._model = model;
+    this._services = services;
   }
 
 
-//search jobs button clicked handler
-  searchHandler(event) {
+/* *
+ * Search jobs button clicked handler
+ * */
+  async searchHandler(event) {
+
     event.preventDefault();
 
-    const userPrefs = this._store.userPrefs;
+    const userPrefs = await this._model.getPrefs();
 
 //check if user deselected all sites, show error
-    if (userPrefs.omitted_sites.length === this._config.supportedSitesAmount) {
+    if (userPrefs.omitted_sites.length === this._defaults.supportedSitesAmount()) {
 
       const message = document.getElementById('message');
       const initialMessage = message.innerText;
@@ -55,18 +58,18 @@ export class Handlers {
 
 //save search values if different
     if (userPrefs.keywords != keywords || userPrefs.location != location) {
-      this._store.userPrefs.keywords = keywords;
-      this._store.userPrefs.location = location;
-      this._model.savePreferences();
+      userPrefs.keywords = keywords;
+      userPrefs.location = location;
+      this._model.savePreferences(userPrefs);
     }
 
-//call background script to open up the necessary pages, send omitted sites
-//send updated prefs to store globaly in background...background passes prefs to content scripts
-//content scripts cannot access chrome storage
-    chrome.runtime.sendMessage({
-      task: 'searchJobs',
-      prefs: [keywords, location]
-    })
+//call background script to open up the necessary pages
+    if (window.chrome) {
+      chrome.runtime.sendMessage({
+        task: 'searchJobs',
+        prefs: [keywords, location]
+      });
+    }
 
 //close settings page if open
     const settings = document.getElementById('settings-page');
@@ -80,11 +83,13 @@ export class Handlers {
     const spinnerContainer = document.getElementById('spinner-container');
     spinnerContainer.getElementsByTagName('span')[1].className = '';
     spinnerContainer.className = '';
-    this.setSettingsHeight();
+    this._services.setSettingsHeight();
   }
 
 
-//settings click handler
+/* *
+ * Settings click handler
+ * */
   settingsHandler(event) {
 
     const settingsButton = event.target;
@@ -108,8 +113,11 @@ export class Handlers {
   }
 
 
-//back click handler
+/* *
+ * Back click handler
+ * */
   backButtonHandler(event) {
+
     const settings = document.getElementById('settings-page');
     const settingsButton = document.getElementsByClassName('saved-listings')[0].nextElementSibling;
     if (settings.style.transform.indexOf('-100') > -1) {
@@ -121,37 +129,42 @@ export class Handlers {
   }
 
 
-//toggle job sites handler
-  jobSitesCheckboxHandler(event) {
+/* *
+ * Toggle job sites handler
+ * */
+  async jobSitesCheckboxHandler(event) {
 
     const target = event.target;
     const siteName = target.name;
-    const userPrefs = this._store.userPrefs.omitted_sites;
+    const userPrefs = await this._model.getPrefs();
+    const omitted_sites = userPrefs.omitted_sites;
     if (target.checked) {
-      const filtered = userPrefs.filter(omitted_site => {
+      const filtered = omitted_sites.filter(omitted_site => {
         return omitted_site != siteName;
       })
-      this._store.userPrefs.omitted_sites = filtered;
-      this._model.savePreferences();
+      userPrefs.omitted_sites = filtered;
+      this._model.savePreferences(userPrefs);
 
     }else {
-      userPrefs.push(siteName);
-      this._store.userPrefs.omitted_sites = userPrefs;
-      this._model.savePreferences();
+      omitted_sites.push(siteName);
+      userPrefs.omitted_sites = omitted_sites;
+      this._model.savePreferences(userPrefs);
 
     }
   }
 
 
-//frequency select handler
-  frequencyChangeHandler(event) {
+/* *
+ * Frequency select handler
+ * */
+  async frequencyChangeHandler(event) {
 
     const frequencyValue = event.target.value;
-    const userPrefs = this._store.userPrefs;
-    if (userPrefs.frequency != frequencyValue) {
+    const userPrefs = await this._model.getPrefs();
+    if (userPrefs.frequency !== frequencyValue) {
 
-      this._store.userPrefs.frequency = frequencyValue;
-      this._model.savePreferences();
+      userPrefs.frequency = frequencyValue;
+      this._model.savePreferences(userPrefs);
 
 //update alarm with new frequency
       this._model.setAlarm();
@@ -159,9 +172,32 @@ export class Handlers {
   }
 
 
-//aggregate results checkbox handler
-  aggregateResultCBHandler(event) {
+/* *
+ * User clicks on SHOW MORE
+ * */
+  async showMoreHandler(event) {
 
+//data-index contains the current listing index
+    const listingIndex = parseInt(event.target.getAttribute('data-index'));
+
+    const listings = await this._model.jobListings();
+//check if on bookmark page
+    if (document.getElementsByClassName('saved-listings')[0].children[0].src.indexOf('active') > -1) {
+//book image src of active image...need saved listings only
+      const filteredListings = listings.filter(listing => listing.saved);
+      this._services.populateListings(filteredListings, listingIndex, true);
+    }else {
+      this._services.populateListings(listings, listingIndex, true);
+    }
+  }
+
+
+/* *
+ * Aggregate results checkbox handler
+ * */
+  async aggregateResultCBHandler(event) {
+
+    const userPrefs = await this._model.getPrefs();
     const checkboxVal = event.target;
     const checkboxLabel = document.getElementById('aggregate-label');
     if (checkboxVal.checked) {
@@ -169,21 +205,23 @@ export class Handlers {
     }else {
       checkboxLabel.innerText = 'No';
     }
-    this._store.userPrefs.aggregate_results = checkboxVal.checked;
-    this._model.savePreferences();
+    userPrefs.aggregate_results = checkboxVal.checked;
+    this._model.savePreferences(userPrefs);
   }
 
 
-//listings limiting SELECT change handler
-  listingsLimitHandler(event) {
+/* *
+ * Listings limiting SELECT change handler
+ * */
+  async listingsLimitHandler(event) {
 
+    const userPrefs = await this._model.getPrefs();
     const listingLimitValue = event.target.value;
 //possible value "default"
     const listingLimit = isNaN(parseInt(listingLimitValue)) ? 0 : listingLimitValue;
 
-    this._store.userPrefs.listing_limit = listingLimit;
-    this._model.savePreferences();
+    userPrefs.listing_limit = listingLimit;
+    this._model.savePreferences(userPrefs);
   }
-
 
 }

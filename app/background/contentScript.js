@@ -2,12 +2,14 @@ if (window.scriptinserted === undefined) {
 //checks if script already inserted
   window.scriptinserted = true;
 
-  (function(window, document) {
-    let port,
-    tabId,
-    userPrefs;
+  let port,
+  tabId,
+  userPrefs,
+  script;
 
-    function getUserPrefs() {
+  class Script {
+
+    getUserPrefs() {
 //ask background to send user prefs
       port.postMessage({
         type: 'userPrefs',
@@ -15,7 +17,7 @@ if (window.scriptinserted === undefined) {
       });
     }
 
-    function processIndeed() {
+    processIndeed() {
 
       if (location.pathname.indexOf('jobs') === -1) {
 //still on home page
@@ -24,7 +26,7 @@ if (window.scriptinserted === undefined) {
         localStorage.removeItem('listings');
 
         if (!userPrefs) {
-          getUserPrefs()
+          this.getUserPrefs()
           return;
         }
         
@@ -54,12 +56,13 @@ if (window.scriptinserted === undefined) {
 
 //give time for results to populate
         if (!resultSection) {
-          setTimeout(init, 3000);
+          const _this = this;
+          setTimeout(_this.init, 3000);
           return;
         }
 
         if (!userPrefs) {
-          getUserPrefs();
+          this.getUserPrefs();
           return;
         }
 
@@ -102,30 +105,34 @@ if (window.scriptinserted === undefined) {
           localStorage.setItem('listings', JSON.stringify(dataToSend));
 
           const extraLinks = document.getElementsByClassName('pagination')[0].getElementsByTagName('a');
-//last link is NEXT
-          extraLinks[extraLinks.length - 1].click();
 
-        }else {
-          setTimeout(() => {
-            port.postMessage({
-              type: 'close',
-              tabId: tabId,
-              data: dataToSend
-            });
-          }, 5000);
+//last link is "NEXT" text
+          const NEXTButton = extraLinks[extraLinks.length - 1];
+          if (/test/gi.test(NEXTButton.innerText)) {
+            NEXTButton.click();
+            return;
+          }
+
         }
+        setTimeout(() => {
+          port.postMessage({
+            type: 'close',
+            tabId: tabId,
+            data: dataToSend
+          });
+        }, 5000);
 
       }
     }
 
 
-    function processLinkedIn() {
+    processLinkedIn() {
 
       if (location.search.length === 0) {
 //home page
 
         if (!userPrefs) {
-          getUserPrefs()
+          this.getUserPrefs()
           return;
         }
         
@@ -171,12 +178,13 @@ if (window.scriptinserted === undefined) {
 
 //give time for results to populate
         if (!resultSection) {
-          setTimeout(init, 3000);
+          const _this = this;
+          setTimeout(_this.init, 3000);
           return;
         }
 
         if (!userPrefs) {
-          getUserPrefs();
+          this.getUserPrefs();
           return;
         }
 
@@ -186,7 +194,8 @@ if (window.scriptinserted === undefined) {
         if (listings.length < parseInt(userPrefs.listing_limit) && document.getElementsByClassName('see-more-jobs').length > 0) {
 //"SEE MORE JOBS" button
           document.getElementsByClassName('see-more-jobs')[0].click();
-          setTimeout(processLinkedIn, 4000);
+          const _this = this;
+          setTimeout(_this.processLinkedIn, 4000);
           return;
         }
 
@@ -200,7 +209,7 @@ if (window.scriptinserted === undefined) {
           const company = listing.getElementsByClassName('job-result-card__subtitle')[0].innerText.trim();
           const summary = listing.getElementsByClassName('job-result-card__snippet')[0].innerText.trim();
 
-          //classname for new listings differs
+//classname for new listings differs
           const date = (() => {
             if (listing.getElementsByClassName('job-result-card__listdate').length > 0) {
               return listing.getElementsByClassName('job-result-card__listdate')[0];
@@ -234,12 +243,13 @@ if (window.scriptinserted === undefined) {
       }
     }
 
-    function processCareerBuilder() {
+
+    processCareerBuilder() {
       if (location.search.length === 0) {
 //still on home page
         
         if (!userPrefs) {
-          getUserPrefs()
+          this.getUserPrefs()
           return;
         }
         
@@ -267,12 +277,13 @@ if (window.scriptinserted === undefined) {
 
 //give time for results to populate
         if (!resultSection) {
-          setTimeout(init, 3000);
+          const _this = this;
+          setTimeout(_this.init, 3000);
           return;
         }
 
         if (!userPrefs) {
-          getUserPrefs();
+          this.getUserPrefs();
           return;
         }
 
@@ -283,7 +294,8 @@ if (window.scriptinserted === undefined) {
         if (listings.length < parseInt(userPrefs.listing_limit) && loadMoreContainer && loadMoreContainer.children[0].style.display != 'none') {
 //"SEE MORE JOBS" button
           document.getElementById('load_more_jobs').getElementsByTagName('a')[0].click();
-          setTimeout(processCareerBuilder, 4000);
+          const _this = this;
+          setTimeout(_this.processCareerBuilder, 4000);
           return;
         }
 
@@ -324,68 +336,73 @@ if (window.scriptinserted === undefined) {
     }
 
 
-    function init() {
+    init() {
       console.log('init');
 
       if (location.href.indexOf('indeed.com') > -1) {
-        processIndeed();
+        this.processIndeed();
       }else if (location.href.indexOf('linkedin.com') > -1) {
-        processLinkedIn();
+        this.processLinkedIn();
       }else if (location.href.indexOf('careerbuilder.com') > -1) {
-        processCareerBuilder();
+        this.processCareerBuilder();
       }
 
     }
+  }
 
 
 //listen to messages from background
-    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-      if (request.type === 'userPrefs') {
-        userPrefs = request.prefs;
+  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.type === 'userPrefs') {
 
-        if (!userPrefs.hasOwnProperty('listing_limit')) {
-          userPrefs['listing_limit'] = '50';
-        }
+      if (!request.prefs.listing_limit) {
+        request.prefs['listing_limit'] = '50';
+      }
+      userPrefs = request.prefs;
 
 //delay execution to simulate user
-        setTimeout(() => {
-          init();
-        }, 2000);
+//class should be instantiated already
+      setTimeout(() => {
+        script.init();
+      }, 2000);
 
-      }
+    }
+  });
+
+
+  chrome.runtime.onConnect.addListener(Port => {
+    const startedLoading = new Date().getTime();
+    port = Port;
+
+//after initial connection, background sends the tabId
+    port.onMessage.addListener(msg => {
+      tabId = msg.tabId;
     });
-
-    chrome.runtime.onConnect.addListener(Port => {
-      const startedLoading = new Date().getTime();
-      port = Port;
-
-      //after initial connection, background sends
-      port.onMessage.addListener(msg => {
-        tabId = msg.tabId;
-      });
 
 //interval to make sure page fully loaded
-      const interval = setInterval(() => {
-        if (document.readyState === 'complete') {
+    const interval = setInterval(() => {
+      if (document.readyState === 'complete') {
 
-          clearInterval(interval);
-          init();
+        clearInterval(interval);
 
-        }else if (new Date().getTime() - window._started > 30000) {
-//if page is stuck on loading for longer than 30 seconds, remove it and start another tab it from the background script
+//instantiate the class
+        script = new Script();
+        script.init();
 
-          clearInterval(interval);
-          port.postMessage({
-            type: 'kill',
-            tabId: tabId,
+      }else if (new Date().getTime() - window._started > 30000) {
+//if page is stuck on loading for longer than 30 seconds, remove it and start another tab from the background script
+
+        clearInterval(interval);
+        port.postMessage({
+          type: 'kill',
+          tabId: tabId,
 //send url so background script does not need to look it up
-            url: location.href
-          });
+          url: location.href
+        });
 
-        }
-      }, 1000);
-    });
-  })(window, document);
+      }
+    }, 1000);
+  });
 
   console.log('injected');
 //last "injected" string gets returned to background

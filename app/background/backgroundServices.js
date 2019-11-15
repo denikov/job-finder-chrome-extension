@@ -2,13 +2,17 @@
 
 export default class Services {
 
-  constructor(config, model, store) {
-    this._config = config;
+  constructor(defaults, model) {
+    this._defaults = defaults;
     this._model = model;
-    this._store = store;
   }
 
-//compare returned listings to saved ones
+
+/* *
+ * Compare returned listings to saved ones
+ * @param {Object []} listings - array of newly returned job listings
+ * @param {Object []} oldListings - array of saved job listings
+ * */
   findNewListings(listings, oldListings) {
     let newListingsCount = 0;
 
@@ -34,7 +38,10 @@ export default class Services {
   }
 
 
-//function to extract and calculate the exact date
+/* *
+ * Function to extract and calculate the exact date
+ * @param {string} date - date text from each website specifying when the listing was posted
+ * */
   formatDate(date) {
     if (/today/gi.test(date)) {
       return new Date().getTime();
@@ -55,25 +62,35 @@ export default class Services {
   }
 
 
-//sort listings by date
+/* *
+ * Sort listings by date
+ * @param {Object []} listings - array of job listings in a random order
+ * */
   sortListings(listings) {
+
 //get the date for a, b listing
 //convert into timestamps and compare
     return listings.sort( (a, b) => this.formatDate(b.date) - this.formatDate(a.date))
   }
 
 
-  runJobSearch() {
+/* *
+ * User initiated a job search
+ * */
+  async runJobSearch() {
+
 //show loading badge to user
     chrome.browserAction.getBadgeText({}, result => {
-      this._store.initialBAtext = result;
+      this._model.saveInitialBAtext(result);
       chrome.browserAction.setBadgeText({
         text: '...'
       })
     })
 
-    let urlsToOpen = [...this._config.jobUrls];
-    let omitted_sites = [...this._store.userPrefs.omitted_sites];
+    let urlsToOpen = [...this._defaults.jobUrls()];
+
+    const userPrefs = await this._model.getPrefs();
+    let omitted_sites = [...userPrefs.omitted_sites];
 
 //sort omitted sites in order to splice the lowest index first
     if (omitted_sites.length > 0) {
@@ -102,8 +119,8 @@ export default class Services {
             chrome.windows.remove(win.id);
           }else {
 //keeping count of currently opened URLs
-            this._store.workingWindowId = win.id;
-            this._store.openTabCounter = urlsToOpen.length;
+            this._model.saveWorkingWindowId(win.id);
+            this._model.saveOpenTabCounter(urlsToOpen.length);
           }
 
         })
@@ -112,99 +129,123 @@ export default class Services {
   }
 
 
-//messages coming in from opened tabs
-  handleMessages() {
+/* *
+ * Messages coming in from opened tabs
+ * */
+  async handleMessages() {
 
-    const msg = this._store.getQueue();
+    const msg = await this._model.openTabsQueueFirst();
     if (msg.type === 'close') {
-      const openTabCounter = this._store.minusTabCounter;
+      const openTabCounter = await this._model.minusTabCounter();
 
       if (openTabCounter > 0) {
         chrome.tabs.remove(msg.tabId);
 
       }else {
 //remove window if only one tab left
-        chrome.windows.remove(this._store.workingWindowId);
-        this._store.workingWindowId = null;
+        const workingWindowId = await this._model.workingWindowId();
+        chrome.windows.remove(workingWindowId);
+        this._model.saveWorkingWindowId();
 
       }
 
       if (msg.data) {
-        processReturnedListings(msg.data);
+        this.processReturnedListings(msg.data);
       }
 
 //continue handlings messages only after returned listings were processed to avoid conflict
-      if (this._store.openTabsQueue.length > 0) {
+      const openTabsQueue = await this._model.openTabsQueue();
+      if (openTabsQueue.length > 0) {
         this.handleMessages();
       }
 
     }else if (msg.type === 'userPrefs') {
 //content script is requesting user search parameters
       
+      const userPrefs = await this._model.getPrefs();
       chrome.tabs.sendMessage(msg.tabId, {
         type: 'userPrefs',
-        prefs: this._store.userPrefs
+        prefs: userPrefs
       });
     }
   }
 
 
-//use new listings to update older ones
-  processReturnedListings(listings) {
+/* *
+ * Send a message to popup in case it's open to finish updating listings
+ * @param {Object []} listings - array of job listings to send to the popup page
+ * @param {number} newCount - amount of new job listings found
+ * */
+  messageToPopup(listings, newCount) {
 
-//allow this function to mutate _model.jobListings
-    const count = this.findNewListings(listings, this._store.jobListings);
-    const newCount = this._store.newListingsCount + count;
-    this._store.newListingsCount = newCount;
-
-//save when all tabs are finished
-    if (this._store.openTabCounter === 0) {
-//sort listings by date...allow mutate _model.jobListings
-      const sortedListings = this.sortListings(this._store.jobListings);
-      this._model.saveListings(sortedListings);
-
-//send a message to popup in case it's open to finish updating listings
-      chrome.runtime.sendMessage({
-        listings: sortedListings
-      }, response => {
-        if (chrome.runtime.lastError) {
+    chrome.runtime.sendMessage({
+      listings: listings
+    }, response => {
+      if (chrome.runtime.lastError) {
 //error if popup is not open; alert user of new listings using the badge. Listings get updated if popup is open
-          
+        
 //get current browserAction badge text
 //update browserAction badge with new listings count
-          chrome.browserAction.getBadgeText({}, result => {
+        chrome.browserAction.getBadgeText({}, result => {
 
 //badge text could be ... while searching
-            if (this._store.initialBAtext && /\w+/gi.test(this._store.initialBAtext)) {
-              result = this._store.initialBAtext;
-            }else {
+          this._model.initialBAtext()
+            .then(initialBAtext => {
+              if (initialBAtext && /\w+/gi.test(initialBAtext)) {
+                result = initialBAtext;
+              }else {
 //badge could be empty...set to 0
-              result = '0';
-            }
-            if (result.indexOf('+') > -1) {
-              return;
-            }
+                result = '0';
+              }
+              if (result.indexOf('+') > -1) {
+                return;
+              }
 
-            const badgeText = parseInt(result) + newCount;
-            if (badgeText === 0) {
+              const badgeText = parseInt(result) + newCount;
+              if (badgeText === 0) {
+                chrome.browserAction.setBadgeText({
+                  text: ''
+                })
+                return;
+              }
               chrome.browserAction.setBadgeText({
-                text: ''
+                text: badgeText > 99 ? '99+' : badgeText.toString()
               })
-              return;
-            }
+              this._model.saveNewListingsCount();
+            });
+        })
 
-            chrome.browserAction.setBadgeText({
-              text: badgeText > 99 ? '99+' : badgeText.toString()
-            })
-            this._store.newListingsCount = 0;
-          })
+      }else {
+        chrome.browserAction.setBadgeText({
+          text: ''
+        })
+      }
+    })
+  }
 
-        }else {
-          chrome.browserAction.setBadgeText({
-            text: ''
-          })
-        }
-      })
+
+/* *
+ * Use new listings to update older ones
+ * @param {Object []} listings - array of saved job listings
+ * */
+  async processReturnedListings(listings) {
+
+//allow this function to mutate _model.jobListings
+    const jobListings = await this._model.jobListings();
+    const count = this.findNewListings(listings, jobListings);
+    const newListingsCount = await this._model.newListingsCount();
+
+    const newCount = newListingsCount + count;
+    this._model.saveNewListingsCount(newCount);
+
+//save when all tabs are finished
+    if (await this._model.openTabCounter() === 0) {
+
+//sort listings by date...allow mutate _model.jobListings
+      const sortedListings = this.sortListings(jobListings);
+      this._model.saveListings(sortedListings);
+
+      this.messageToPopup(sortedListings, newCount);
     }
   }
 
