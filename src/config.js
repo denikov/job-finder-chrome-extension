@@ -6,23 +6,28 @@
 
 export class Config {
   
-  constructor() {
-
-    this.defaultFrequency = '6';
-    this.listingLimit = 50;
-
-    this.jobUrls = [
+  jobUrls() {
+    return [
       'https://www.indeed.com/worldwide',
       'https://www.linkedin.com/jobs',
       'https://www.careerbuilder.com/'
-    ]
+    ];
+  }
 
-//define pagination limit
-    this.listingsPageLimit = 15;
+  defaultFrequency() {
+    return '6';
+  }
 
-//used for error checking if user deselects all sites
-    this.supportedSitesAmount = 3;
+  listingLimit() {
+    return 50;
+  }
 
+  supportedSitesAmount() {
+    return 3;
+  }
+
+  listingsPageLimit() {
+    return 15;
   }
 
 }
