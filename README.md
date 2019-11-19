@@ -11,6 +11,7 @@ This extension was created to automate the job searching process.  It opens a wi
 `npm test` - Run all tests
 
 `node_modules/.bin/babel-node node_modules/.bin/jasmine --config=test/jasmine.json {individual spec file}` - Run individual test file
+
 Tools used:
 - Gulp - needed to transpile `.js` files in order to test with JSDOM
 - - Babel 7
