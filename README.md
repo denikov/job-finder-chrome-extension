@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/denikov/job-finder-chrome-extension.svg?branch=master)](https://travis-ci.org/denikov/job-finder-chrome-extension)
+
 # job-finder-chrome-extension
 Chrome browser extension to help automate searching and staying up to date with job listings
 
